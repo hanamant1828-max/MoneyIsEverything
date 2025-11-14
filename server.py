@@ -2,9 +2,9 @@ import os
 import base64
 import io
 import sqlite3
-import hashlib
 import secrets
 from datetime import datetime, timedelta
+from passlib.hash import bcrypt
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Cookie, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -32,55 +32,52 @@ else:
     print("WARNING: GEMINI_API_KEY not set. The /predict endpoint will not work.")
 
 def init_database():
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    cursor.execute("SELECT COUNT(*) FROM users WHERE username = 'admin'")
-    if cursor.fetchone()[0] == 0:
-        admin_password_hash = hashlib.sha256("admin123".encode()).hexdigest()
-        cursor.execute(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            ("admin", admin_password_hash)
-        )
-    
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        cursor.execute("SELECT COUNT(*) FROM users WHERE username = 'admin'")
+        if cursor.fetchone()[0] == 0:
+            admin_password_hash = bcrypt.hash("admin123")
+            cursor.execute(
+                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                ("admin", admin_password_hash)
+            )
+        
+        conn.commit()
 
 def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
+    return bcrypt.hash(password)
 
 def verify_user(username: str, password: str) -> bool:
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT password_hash FROM users WHERE username = ?",
-        (username,)
-    )
-    result = cursor.fetchone()
-    conn.close()
-    
-    if result:
-        return result[0] == hash_password(password)
-    return False
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT password_hash FROM users WHERE username = ?",
+            (username,)
+        )
+        result = cursor.fetchone()
+        
+        if result:
+            return bcrypt.verify(password, result[0])
+        return False
 
 def create_user(username: str, password: str) -> bool:
     try:
-        conn = sqlite3.connect(DATABASE)
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            (username, hash_password(password))
-        )
-        conn.commit()
-        conn.close()
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                (username, hash_password(password))
+            )
+            conn.commit()
         return True
     except sqlite3.IntegrityError:
         return False
@@ -127,7 +124,14 @@ async def login(username: str = Form(...), password: str = Form(...)):
     if verify_user(username, password):
         session_id = create_session(username)
         response = JSONResponse(content={"success": True, "message": "Login successful"})
-        response.set_cookie(key="session_id", value=session_id, httponly=True, max_age=86400)
+        response.set_cookie(
+            key="session_id",
+            value=session_id,
+            httponly=True,
+            max_age=86400,
+            secure=True,
+            samesite="lax"
+        )
         return response
     else:
         raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -142,7 +146,14 @@ async def register(username: str = Form(...), password: str = Form(...)):
     if create_user(username, password):
         session_id = create_session(username)
         response = JSONResponse(content={"success": True, "message": "Registration successful"})
-        response.set_cookie(key="session_id", value=session_id, httponly=True, max_age=86400)
+        response.set_cookie(
+            key="session_id",
+            value=session_id,
+            httponly=True,
+            max_age=86400,
+            secure=True,
+            samesite="lax"
+        )
         return response
     else:
         raise HTTPException(status_code=400, detail="Username already exists")
@@ -152,7 +163,7 @@ async def logout(session_id: str = Cookie(None)):
     if session_id and session_id in SESSIONS:
         del SESSIONS[session_id]
     response = JSONResponse(content={"success": True, "message": "Logged out successfully"})
-    response.delete_cookie(key="session_id")
+    response.delete_cookie(key="session_id", secure=True, samesite="lax")
     return response
 
 @app.get("/api/user")
