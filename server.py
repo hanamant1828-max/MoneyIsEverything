@@ -44,31 +44,24 @@ async def predict_currency(file: UploadFile = File(...)):
         image.verify()
         image = Image.open(io.BytesIO(contents))
         
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        max_size = 1024
+        if image.width > max_size or image.height > max_size:
+            image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
         
-        prompt = """You are an expert in Indian currency authentication. Analyze this image and make a DEFINITIVE decision: is it REAL or FAKE? You MUST choose one - no uncertain answers allowed.
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        prompt = """Authenticate this Indian currency note. Choose: REAL or FAKE.
 
-CRITICAL RULES:
-1. If ALL serial numbers are zeros (000 000000 or similar) → ALWAYS classify as FAKE
-2. If the image is unclear or low quality → Make your best judgment based on what you CAN see
-3. You MUST give a clear REAL or FAKE classification - never say uncertain
+CRITICAL: If serial numbers are all zeros (000 000000) → FAKE
 
-Security features to check:
-- Serial numbers (all zeros = FAKE)
-- Watermark quality
-- Security thread
-- Micro-lettering
-- Print quality and sharpness
-- Color accuracy
-- Portrait details
-- Denomination markings
+Check: serial numbers, watermark, security thread, print quality, colors.
 
-RESPONSE FORMAT (strictly follow):
-1. Classification: REAL or FAKE (pick one, no other options)
-2. Confidence: A percentage (0-100%)
-3. Explanation: Brief explanation of your decision
+Format:
+1. Classification: REAL or FAKE
+2. Confidence: percentage
+3. Explanation: brief reason
 
-Remember: You must make a definitive choice between REAL or FAKE. No uncertain classifications allowed."""
+Must choose REAL or FAKE only."""
 
         response = model.generate_content([prompt, image])
         
