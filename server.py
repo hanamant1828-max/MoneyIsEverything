@@ -46,29 +46,29 @@ async def predict_currency(file: UploadFile = File(...)):
         
         model = genai.GenerativeModel('gemini-2.5-flash')
         
-        prompt = """You are an expert in Indian currency authentication. Analyze this image carefully and determine if it shows a REAL or FAKE Indian currency note.
+        prompt = """You are an expert in Indian currency authentication. Analyze this image and make a DEFINITIVE decision: is it REAL or FAKE? You MUST choose one - no uncertain answers allowed.
 
-CRITICAL: Check the serial numbers first! If ALL the serial numbers are zeros (e.g., 000 000000 or 0000000), this is ALWAYS a FAKE note. Genuine Indian currency NEVER has all-zero serial numbers.
+CRITICAL RULES:
+1. If ALL serial numbers are zeros (000 000000 or similar) → ALWAYS classify as FAKE
+2. If the image is unclear or low quality → Make your best judgment based on what you CAN see
+3. You MUST give a clear REAL or FAKE classification - never say uncertain
 
-Consider the following security features commonly found in genuine Indian currency:
-- Serial numbers: Must contain varied digits, NEVER all zeros
-- Watermark visibility and quality
-- Security thread presence and characteristics
-- Micro-lettering clarity
-- Intaglio printing (raised print feel visible in high-res images)
-- Fluorescent ink under UV (if visible)
-- See-through register alignment
-- Identification mark for visually impaired
-- Number panel and denomination
-- Portrait and overall print quality
-- Color and paper quality
+Security features to check:
+- Serial numbers (all zeros = FAKE)
+- Watermark quality
+- Security thread
+- Micro-lettering
+- Print quality and sharpness
+- Color accuracy
+- Portrait details
+- Denomination markings
 
-Provide your analysis in the following format:
-1. Classification: REAL or FAKE
+RESPONSE FORMAT (strictly follow):
+1. Classification: REAL or FAKE (pick one, no other options)
 2. Confidence: A percentage (0-100%)
-3. Explanation: A detailed explanation of why you classified it as real or fake, mentioning specific features you observed (especially the serial numbers)
+3. Explanation: Brief explanation of your decision
 
-Be thorough and precise in your analysis."""
+Remember: You must make a definitive choice between REAL or FAKE. No uncertain classifications allowed."""
 
         response = model.generate_content([prompt, image])
         
@@ -82,8 +82,8 @@ Be thorough and precise in your analysis."""
         
         import re
         
-        label = "UNCERTAIN"
-        classification_match = re.search(r'classification:\s*(REAL|FAKE|UNCERTAIN)', analysis_text, re.IGNORECASE)
+        label = "FAKE"
+        classification_match = re.search(r'classification:\s*(REAL|FAKE)', analysis_text, re.IGNORECASE)
         if classification_match:
             label = classification_match.group(1).upper()
         
