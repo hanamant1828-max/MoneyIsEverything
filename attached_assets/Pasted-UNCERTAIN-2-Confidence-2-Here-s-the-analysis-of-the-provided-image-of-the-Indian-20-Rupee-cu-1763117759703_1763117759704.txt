@@ -1,0 +1,24 @@
+UNCERTAIN
+2%
+Confidence: 2%
+
+Here's the analysis of the provided image of the Indian 20 Rupee currency note:
+
+1.  **Classification:** REAL
+2.  **Confidence:** 95%
+3.  **Explanation:**
+    Based on a careful examination of the visible security features, the currency note in the image appears to be genuine.
+
+    Here are the specific observations:
+
+    *   **Serial Numbers:** The serial numbers (00A 706714) on both the top right and bottom left panels are identical and **do not consist of all zeros**. This is a crucial indicator of authenticity, as genuine Indian currency never has all-zero serial numbers. The font and spacing also appear consistent with authentic notes.
+    *   **Watermark:** The watermark area on the left side clearly shows a well-defined portrait of Mahatma Gandhi, matching the one on the security thread side. The quality and placement are consistent with genuine currency.
+    *   **Security Thread:** A clear, segmented security thread is visible vertically to the left of Mahatma Gandhi's portrait. It appears embedded and metallic, which is a characteristic of genuine notes of this denomination and series.
+    *   **Intaglio Printing:** While direct tactile inspection is not possible, the sharpness and detail in areas like Mahatma Gandhi's portrait, the Ashoka Pillar emblem, the Guarantee Clause, the Promise Clause ("I PROMISE TO PAY THE BEARER THE SUM OF TWENTY RUPEES"), and the numerical denomination (₹20) suggest the presence of raised intaglio printing. The lines are crisp and well-defined, not flat or blurry.
+    *   **Micro-lettering:** Though difficult to read precisely at this resolution, the fine lines around the portrait and other areas where micro-lettering is expected do not appear as solid, blurry lines, suggesting the presence of micro-text.
+    *   **See-through Register:** The floral design on the front (left of security thread) and its corresponding part on the reverse (bottom left) appear to be designed to align perfectly when held against light, which is a key security feature. The visible halves suggest good registration.
+    *   **Identification Mark for Visually Impaired:** A prominent raised vertical rectangle (tactile mark) is clearly visible on the left side of the obverse, next to the watermark window, which is correct for a ₹20 note of this series.
+    *   **Portrait and Overall Print Quality:** Mahatma Gandhi's portrait is detailed, with good tonal gradation. The Ashoka Pillar emblem is sharp. The overall printing quality, including the intricate patterns, text, and numerical denominations, is high, with no signs of smudging, misalignment, or inferior ink quality often found in counterfeits.
+    *   **Color and Paper Quality:** The note displays the characteristic reddish-orange color scheme of the 20 Rupee note. The paper texture, as far as can be discerned visually, appears appropriate and not flimsy. The year '2014' is visible on the reverse, which is consistent with the issuance of this series.
+
+    The image quality is good enough to observe these critical details, and all indications point towards a genuine note. The "indiararecoins" watermark is an overlay on the image itself and not part of the currency note.
