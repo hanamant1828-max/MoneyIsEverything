@@ -48,7 +48,10 @@ async def predict_currency(file: UploadFile = File(...)):
         
         prompt = """You are an expert in Indian currency authentication. Analyze this image carefully and determine if it shows a REAL or FAKE Indian currency note.
 
+CRITICAL: Check the serial numbers first! If ALL the serial numbers are zeros (e.g., 000 000000 or 0000000), this is ALWAYS a FAKE note. Genuine Indian currency NEVER has all-zero serial numbers.
+
 Consider the following security features commonly found in genuine Indian currency:
+- Serial numbers: Must contain varied digits, NEVER all zeros
 - Watermark visibility and quality
 - Security thread presence and characteristics
 - Micro-lettering clarity
@@ -63,7 +66,7 @@ Consider the following security features commonly found in genuine Indian curren
 Provide your analysis in the following format:
 1. Classification: REAL or FAKE
 2. Confidence: A percentage (0-100%)
-3. Explanation: A detailed explanation of why you classified it as real or fake, mentioning specific features you observed
+3. Explanation: A detailed explanation of why you classified it as real or fake, mentioning specific features you observed (especially the serial numbers)
 
 Be thorough and precise in your analysis."""
 

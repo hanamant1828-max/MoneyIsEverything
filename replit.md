@@ -72,6 +72,7 @@ A complete web application that uses Google's Gemini Vision API (gemini-2.5-flas
   - Added deployment configuration
   - Set up workflow for port 5000
   - Updated to use gemini-2.5-flash model (latest available model)
+  - Enhanced AI prompt to prioritize serial number validation (all-zero serial numbers = FAKE)
 
 ## Architecture Decisions
 - **FastAPI over Flask**: Chosen for async support and better performance
