@@ -1,7 +1,7 @@
 # Indian Currency Detection Web App
 
 ## Overview
-A complete web application that uses Google's Gemini Vision API (gemini-1.5-flash model) to detect whether uploaded images of Indian currency notes are real or fake. The app provides AI-powered analysis with confidence scoring and detailed explanations.
+A complete web application that uses Google's Gemini Vision API (gemini-2.5-flash model) to detect whether uploaded images of Indian currency notes are real or fake. The app provides AI-powered analysis with confidence scoring and detailed explanations.
 
 ## Project Structure
 ```
@@ -18,7 +18,7 @@ A complete web application that uses Google's Gemini Vision API (gemini-1.5-flas
 
 ## Technology Stack
 - **Backend**: Python FastAPI
-- **AI Model**: Google Gemini 1.5 Flash Vision
+- **AI Model**: Google Gemini 2.5 Flash Vision
 - **Frontend**: Vanilla HTML/CSS/JavaScript
 - **Server**: Uvicorn ASGI server
 - **Image Processing**: Pillow (PIL)
@@ -68,13 +68,14 @@ A complete web application that uses Google's Gemini Vision API (gemini-1.5-flas
 - 2025-11-14: Initial project creation
   - Created FastAPI backend with /predict endpoint
   - Built responsive frontend with drag-drop upload
-  - Integrated Gemini 1.5 Flash Vision API
+  - Integrated Gemini 2.5 Flash Vision API
   - Added deployment configuration
   - Set up workflow for port 5000
+  - Updated to use gemini-2.5-flash model (latest available model)
 
 ## Architecture Decisions
 - **FastAPI over Flask**: Chosen for async support and better performance
 - **Vanilla JS over React**: Simpler setup, faster load time for single-page app
-- **Gemini 1.5 Flash**: Balanced speed and accuracy for real-time detection
+- **Gemini 2.5 Flash**: Latest model with enhanced speed and accuracy for real-time detection
 - **Port 5000**: Required for Replit webview integration
 - **StaticFiles mount**: Serves frontend assets efficiently

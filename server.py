@@ -44,7 +44,7 @@ async def predict_currency(file: UploadFile = File(...)):
         image.verify()
         image = Image.open(io.BytesIO(contents))
         
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         prompt = """You are an expert in Indian currency authentication. Analyze this image carefully and determine if it shows a REAL or FAKE Indian currency note.
 

@@ -5,7 +5,7 @@ A web application that uses Google's Gemini Vision API to detect whether Indian 
 ## Features
 
 - 🖼️ **Image Upload**: Drag & drop or select currency images
-- 🤖 **AI Analysis**: Uses Gemini 1.5 Flash for vision-based detection
+- 🤖 **AI Analysis**: Uses Gemini 2.5 Flash for vision-based detection
 - 📊 **Confidence Scoring**: Shows detection confidence percentage
 - 📝 **Detailed Explanation**: Provides reasoning for the classification
 - 🎨 **Responsive Design**: Works on desktop and mobile devices
@@ -50,7 +50,7 @@ The app will be available at `http://localhost:5000`
 ## Technology Stack
 
 - **Backend**: FastAPI (Python)
-- **AI Model**: Google Gemini 1.5 Flash Vision
+- **AI Model**: Google Gemini 2.5 Flash Vision
 - **Frontend**: HTML, CSS, JavaScript
 - **Image Processing**: Pillow (PIL)
 
