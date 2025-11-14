@@ -9,6 +9,33 @@ const resultLabel = document.getElementById('resultLabel');
 const confidenceFill = document.getElementById('confidenceFill');
 const confidenceText = document.getElementById('confidenceText');
 const explanation = document.getElementById('explanation');
+const usernameElement = document.getElementById('username');
+const logoutBtn = document.getElementById('logoutBtn');
+
+async function fetchUser() {
+    try {
+        const response = await fetch('/api/user');
+        if (response.ok) {
+            const data = await response.json();
+            usernameElement.textContent = `Welcome, ${data.username}`;
+        }
+    } catch (err) {
+        console.error('Error fetching user:', err);
+    }
+}
+
+logoutBtn.addEventListener('click', async () => {
+    try {
+        const response = await fetch('/api/logout', { method: 'POST' });
+        if (response.ok) {
+            window.location.href = '/login';
+        }
+    } catch (err) {
+        console.error('Error logging out:', err);
+    }
+});
+
+fetchUser();
 
 uploadArea.addEventListener('click', () => fileInput.click());
 

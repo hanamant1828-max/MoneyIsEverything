@@ -1,14 +1,21 @@
 import os
 import base64
 import io
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
+import sqlite3
+import hashlib
+import secrets
+from datetime import datetime, timedelta
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Cookie, Response
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
 from PIL import Image
 
 app = FastAPI()
+
+DATABASE = "users.db"
+SESSIONS = {}
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,10 +31,136 @@ if api_key:
 else:
     print("WARNING: GEMINI_API_KEY not set. The /predict endpoint will not work.")
 
+def init_database():
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    cursor.execute("SELECT COUNT(*) FROM users WHERE username = 'admin'")
+    if cursor.fetchone()[0] == 0:
+        admin_password_hash = hashlib.sha256("admin123".encode()).hexdigest()
+        cursor.execute(
+            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+            ("admin", admin_password_hash)
+        )
+    
+    conn.commit()
+    conn.close()
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_user(username: str, password: str) -> bool:
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT password_hash FROM users WHERE username = ?",
+        (username,)
+    )
+    result = cursor.fetchone()
+    conn.close()
+    
+    if result:
+        return result[0] == hash_password(password)
+    return False
+
+def create_user(username: str, password: str) -> bool:
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+            (username, hash_password(password))
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+
+def create_session(username: str) -> str:
+    session_id = secrets.token_urlsafe(32)
+    SESSIONS[session_id] = {
+        "username": username,
+        "created_at": datetime.now()
+    }
+    return session_id
+
+def get_session_user(session_id: str) -> str:
+    if session_id in SESSIONS:
+        session = SESSIONS[session_id]
+        if datetime.now() - session["created_at"] < timedelta(hours=24):
+            return session["username"]
+        else:
+            del SESSIONS[session_id]
+    return None
+
+init_database()
+
 @app.get("/")
-async def read_root():
+async def read_root(session_id: str = Cookie(None)):
+    user = get_session_user(session_id) if session_id else None
+    if not user:
+        return RedirectResponse(url="/login")
     with open("static/index.html", "r") as f:
         return HTMLResponse(content=f.read())
+
+@app.get("/login")
+async def login_page():
+    with open("static/login.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
+@app.get("/register")
+async def register_page():
+    with open("static/register.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
+@app.post("/api/login")
+async def login(username: str = Form(...), password: str = Form(...)):
+    if verify_user(username, password):
+        session_id = create_session(username)
+        response = JSONResponse(content={"success": True, "message": "Login successful"})
+        response.set_cookie(key="session_id", value=session_id, httponly=True, max_age=86400)
+        return response
+    else:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+@app.post("/api/register")
+async def register(username: str = Form(...), password: str = Form(...)):
+    if len(username) < 3:
+        raise HTTPException(status_code=400, detail="Username must be at least 3 characters")
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    if create_user(username, password):
+        session_id = create_session(username)
+        response = JSONResponse(content={"success": True, "message": "Registration successful"})
+        response.set_cookie(key="session_id", value=session_id, httponly=True, max_age=86400)
+        return response
+    else:
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+@app.post("/api/logout")
+async def logout(session_id: str = Cookie(None)):
+    if session_id and session_id in SESSIONS:
+        del SESSIONS[session_id]
+    response = JSONResponse(content={"success": True, "message": "Logged out successfully"})
+    response.delete_cookie(key="session_id")
+    return response
+
+@app.get("/api/user")
+async def get_user(session_id: str = Cookie(None)):
+    user = get_session_user(session_id) if session_id else None
+    if user:
+        return {"username": user}
+    raise HTTPException(status_code=401, detail="Not authenticated")
 
 @app.post("/predict")
 async def predict_currency(file: UploadFile = File(...)):
