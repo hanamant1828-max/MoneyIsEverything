@@ -4,7 +4,7 @@ import io
 import sqlite3
 import secrets
 from datetime import datetime, timedelta
-from passlib.hash import bcrypt
+import bcrypt
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Cookie, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -45,7 +45,7 @@ def init_database():
         
         cursor.execute("SELECT COUNT(*) FROM users WHERE username = 'admin'")
         if cursor.fetchone()[0] == 0:
-            admin_password_hash = bcrypt.hash("admin123")
+            admin_password_hash = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt()).decode()
             cursor.execute(
                 "INSERT INTO users (username, password_hash) VALUES (?, ?)",
                 ("admin", admin_password_hash)
@@ -54,7 +54,7 @@ def init_database():
         conn.commit()
 
 def hash_password(password: str) -> str:
-    return bcrypt.hash(password)
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_user(username: str, password: str) -> bool:
     with sqlite3.connect(DATABASE) as conn:
@@ -66,7 +66,7 @@ def verify_user(username: str, password: str) -> bool:
         result = cursor.fetchone()
         
         if result:
-            return bcrypt.verify(password, result[0])
+            return bcrypt.checkpw(password.encode(), result[0].encode())
         return False
 
 def create_user(username: str, password: str) -> bool:
