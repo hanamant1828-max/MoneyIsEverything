@@ -69,34 +69,31 @@ Be thorough and precise in your analysis."""
 
         response = model.generate_content([prompt, image])
         
+        if not response or not response.text:
+            raise HTTPException(
+                status_code=500,
+                detail="Gemini API returned an empty response. Please try again with a clearer image."
+            )
+        
         analysis_text = response.text
         
-        if "REAL" in analysis_text.upper() and "FAKE" not in analysis_text.split('\n')[0].upper():
-            label = "REAL"
-        elif "FAKE" in analysis_text.upper():
-            label = "FAKE"
-        else:
-            label = "UNCERTAIN"
+        import re
         
-        confidence = 0
+        label = "UNCERTAIN"
+        classification_match = re.search(r'classification:\s*(REAL|FAKE|UNCERTAIN)', analysis_text, re.IGNORECASE)
+        if classification_match:
+            label = classification_match.group(1).upper()
+        
+        confidence = None
         for line in analysis_text.split('\n'):
-            if 'confidence' in line.lower() and '%' in line:
-                try:
-                    import re
-                    numbers = re.findall(r'\d+', line)
-                    if numbers:
-                        confidence = int(numbers[0])
-                        break
-                except:
-                    pass
+            if 'confidence:' in line.lower():
+                numbers = re.findall(r'\d+', line)
+                if numbers:
+                    confidence = min(100, max(0, int(numbers[0])))
+                    break
         
-        if confidence == 0:
-            if label == "REAL":
-                confidence = 75
-            elif label == "FAKE":
-                confidence = 70
-            else:
-                confidence = 50
+        if confidence is None:
+            confidence = 50
         
         return JSONResponse(content={
             "label": label,
