@@ -5,12 +5,15 @@ import sqlite3
 import secrets
 from datetime import datetime, timedelta
 import bcrypt
+from dotenv import load_dotenv
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Cookie, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
 from PIL import Image
+
+load_dotenv()
 
 app = FastAPI()
 
