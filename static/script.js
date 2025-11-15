@@ -118,8 +118,6 @@ function displayResults(data) {
     confidenceFill.textContent = data.confidence + '%';
     confidenceText.textContent = `Confidence: ${data.confidence}%`;
     
-    explanation.textContent = data.explanation;
-    
     resultsSection.style.display = 'block';
 }
 
