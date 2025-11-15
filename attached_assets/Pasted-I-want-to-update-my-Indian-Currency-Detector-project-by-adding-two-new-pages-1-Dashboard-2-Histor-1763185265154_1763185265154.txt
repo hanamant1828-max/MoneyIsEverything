@@ -1,0 +1,85 @@
+I want to update my Indian Currency Detector project by adding two new pages:
+1. Dashboard
+2. History Page
+
+Please implement the following changes:
+
+-----------------------------------------
+### 1. Add DASHBOARD Page
+-----------------------------------------
+Create a new page called "Dashboard" that shows:
+
+* Total number of currency checks done  
+* Number of REAL detections  
+* Number of FAKE detections  
+* A small chart (bar or pie) showing real vs fake stats  
+* Recent 5 uploaded currency images with result  
+* A quick button: "Start New Detection"
+
+UI Style:
+* Same purple theme as the homepage
+* Use card components with smooth shadows
+* Clean, modern layout
+
+Route:
+GET /dashboard
+
+-----------------------------------------
+### 2. Add HISTORY Page
+-----------------------------------------
+Create a page called “History” that shows all previous currency checks.
+
+Table Columns:
+* ID  
+* Image thumbnail  
+* Detected Result (Real / Fake)  
+* Confidence %  
+* Date & Time  
+* Action: View full details
+
+Route:
+GET /history
+
+Also create:
+GET /history/<id>
+To show full analysis of that particular currency image.
+
+-----------------------------------------
+### 3. Update Navigation Bar
+-----------------------------------------
+In the top-right navigation, add:
+
+[Dashboard] [History] [Welcome, admin] [Logout]
+
+Ensure active page is highlighted.
+
+-----------------------------------------
+### 4. Database Update
+-----------------------------------------
+Create or update a database table named “history” with fields:
+
+id (INTEGER PRIMARY KEY AUTOINCREMENT)
+image_path TEXT
+result TEXT
+confidence REAL
+timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+
+Whenever a currency is analyzed, automatically insert a row into this table.
+
+-----------------------------------------
+### 5. UI Integration
+-----------------------------------------
+Connect the Dashboard and History pages so that:
+* After scanning an image, user is redirected to the result page
+* That result is added to HISTORY
+* Dashboard updates automatically
+
+-----------------------------------------
+Make all required changes in:
+* HTML templates
+* Flask routes
+* CSS/JS files
+* Database migrations (if any)
+-----------------------------------------
+
+After completing, restart the server and verify the new pages render correctly.
