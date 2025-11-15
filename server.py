@@ -224,7 +224,6 @@ Check: serial numbers, watermark, security thread, print quality, colors.
 Format:
 1. Classification: REAL or FAKE
 2. Confidence: percentage
-3. Explanation: brief reason
 
 Must choose REAL or FAKE only."""
 
@@ -268,7 +267,6 @@ Must choose REAL or FAKE only."""
         return JSONResponse(content={
             "label": label,
             "confidence": confidence,
-            "explanation": analysis_text,
             "success": True,
             "history_id": history_id
         })

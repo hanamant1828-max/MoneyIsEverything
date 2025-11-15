@@ -8,7 +8,6 @@ const error = document.getElementById('error');
 const resultLabel = document.getElementById('resultLabel');
 const confidenceFill = document.getElementById('confidenceFill');
 const confidenceText = document.getElementById('confidenceText');
-const explanation = document.getElementById('explanation');
 const usernameElement = document.getElementById('username');
 const logoutBtn = document.getElementById('logoutBtn');
 
