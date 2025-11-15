@@ -1,4 +1,4 @@
-modules = ["web", "python-3.11", "nodejs-20"]
+modules = ["python-3.11", "web", "nodejs-20"]
 [agent]
 expertMode = true
 integrations = ["python_gemini:1.0.0"]
@@ -42,6 +42,10 @@ externalPort = 3000
 [[ports]]
 localPort = 34283
 externalPort = 3002
+
+[[ports]]
+localPort = 41655
+externalPort = 3001
 
 [deployment]
 deploymentTarget = "autoscale"
