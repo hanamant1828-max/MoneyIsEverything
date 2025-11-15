@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Indian Currency Detector</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <div>
+                    <h1>🇮🇳 Indian Currency Detector</h1>
+                    <p class="subtitle">Dashboard</p>
+                </div>
+                <div class="user-section">
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/dashboard" class="nav-link active">Dashboard</a>
+                    <a href="/history" class="nav-link">History</a>
+                    <span class="username" id="username"></span>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="totalChecks">0</div>
+                    <div class="stat-label">Total Checks</div>
+                </div>
+                <div class="stat-card real">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="realCount">0</div>
+                    <div class="stat-label">Real Currency</div>
+                </div>
+                <div class="stat-card fake">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-value" id="fakeCount">0</div>
+                    <div class="stat-label">Fake Currency</div>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <h3>Detection Statistics</h3>
+                <div class="chart-container">
+                    <canvas id="statsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="recent-section">
+                <h3>Recent Detections</h3>
+                <div id="recentDetections" class="recent-grid"></div>
+            </div>
+
+            <div class="action-section">
+                <a href="/" class="primary-button">Start New Detection</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>

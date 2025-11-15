@@ -43,6 +43,18 @@ def init_database():
             )
         ''')
         
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                image_data TEXT NOT NULL,
+                result TEXT NOT NULL,
+                confidence REAL NOT NULL,
+                explanation TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
         cursor.execute("SELECT COUNT(*) FROM users WHERE username = 'admin'")
         if cursor.fetchone()[0] == 0:
             admin_password_hash = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt()).decode()
@@ -174,7 +186,11 @@ async def get_user(session_id: str = Cookie(None)):
     raise HTTPException(status_code=401, detail="Not authenticated")
 
 @app.post("/predict")
-async def predict_currency(file: UploadFile = File(...)):
+async def predict_currency(file: UploadFile = File(...), session_id: str = Cookie(None)):
+    user = get_session_user(session_id) if session_id else None
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
     if not api_key:
         raise HTTPException(
             status_code=500,
@@ -191,6 +207,8 @@ async def predict_currency(file: UploadFile = File(...)):
         max_size = 1024
         if image.width > max_size or image.height > max_size:
             image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+        
+        image_base64 = base64.b64encode(contents).decode('utf-8')
         
         model = genai.GenerativeModel('gemini-2.0-flash')
         
@@ -235,15 +253,129 @@ Must choose REAL or FAKE only."""
         if confidence is None:
             confidence = 50
         
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO history (username, image_data, result, confidence, explanation) VALUES (?, ?, ?, ?, ?)",
+                (user, image_base64, label, confidence, analysis_text)
+            )
+            conn.commit()
+            history_id = cursor.lastrowid
+        
         return JSONResponse(content={
             "label": label,
             "confidence": confidence,
             "explanation": analysis_text,
-            "success": True
+            "success": True,
+            "history_id": history_id
         })
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+
+@app.get("/dashboard")
+async def dashboard_page(session_id: str = Cookie(None)):
+    user = get_session_user(session_id) if session_id else None
+    if not user:
+        return RedirectResponse(url="/login")
+    with open("static/dashboard.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
+@app.get("/history")
+async def history_page(session_id: str = Cookie(None)):
+    user = get_session_user(session_id) if session_id else None
+    if not user:
+        return RedirectResponse(url="/login")
+    with open("static/history.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
+@app.get("/api/dashboard-stats")
+async def get_dashboard_stats(session_id: str = Cookie(None)):
+    user = get_session_user(session_id) if session_id else None
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM history WHERE username = ?", (user,))
+        total = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM history WHERE username = ? AND result = 'REAL'", (user,))
+        real_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM history WHERE username = ? AND result = 'FAKE'", (user,))
+        fake_count = cursor.fetchone()[0]
+        
+        cursor.execute(
+            "SELECT id, image_data, result, confidence, timestamp FROM history WHERE username = ? ORDER BY timestamp DESC LIMIT 5",
+            (user,)
+        )
+        recent = []
+        for row in cursor.fetchall():
+            recent.append({
+                "id": row[0],
+                "image_data": row[1],
+                "result": row[2],
+                "confidence": row[3],
+                "timestamp": row[4]
+            })
+    
+    return {
+        "total": total,
+        "real_count": real_count,
+        "fake_count": fake_count,
+        "recent": recent
+    }
+
+@app.get("/api/history")
+async def get_history(session_id: str = Cookie(None)):
+    user = get_session_user(session_id) if session_id else None
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, image_data, result, confidence, timestamp FROM history WHERE username = ? ORDER BY timestamp DESC",
+            (user,)
+        )
+        history = []
+        for row in cursor.fetchall():
+            history.append({
+                "id": row[0],
+                "image_data": row[1],
+                "result": row[2],
+                "confidence": row[3],
+                "timestamp": row[4]
+            })
+    
+    return {"history": history}
+
+@app.get("/api/history/{history_id}")
+async def get_history_detail(history_id: int, session_id: str = Cookie(None)):
+    user = get_session_user(session_id) if session_id else None
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, image_data, result, confidence, explanation, timestamp FROM history WHERE id = ? AND username = ?",
+            (history_id, user)
+        )
+        row = cursor.fetchone()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="History not found")
+        
+        return {
+            "id": row[0],
+            "image_data": row[1],
+            "result": row[2],
+            "confidence": row[3],
+            "explanation": row[4],
+            "timestamp": row[5]
+        }
 
 @app.get("/health")
 async def health_check():
